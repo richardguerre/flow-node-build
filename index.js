@@ -56209,6 +56209,7 @@ builder5.mutationField("updateFlowNode", (t) => t.field({
   description: "Update the flow-node repo and restart it once up to date.",
   resolve: async (_, args) => {
     await gitPullFlowNode();
+    console.log("\u2705 flow-node repo updated.");
     return true;
   }
 }));
