@@ -51368,10 +51368,11 @@ import path from "path";
 var basePath = env.PATH_TO_BUILDS ?? "../builds";
 var gitPullFlowBuild = async (opts) => {
   const pathToBuild = path.resolve(import.meta.dir, `${basePath}/${opts.build}`);
-  console.log(`\uD83D\uDD35 updating ${opts.build} build at ${pathToBuild}/${opts.build}...`);
+  console.log(`\uD83D\uDD35 updating ${opts.build} build at ${pathToBuild}...`);
   const res = await spawn("git pull".split(" "), {
     cwd: pathToBuild
   });
+  console.log(`\u2705 ${opts.build} build is now up to date.`);
   return res;
 };
 var gitPullFlowNode = async () => {
