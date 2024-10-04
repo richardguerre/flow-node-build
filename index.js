@@ -45349,7 +45349,7 @@ class YogaServer {
 
 // src/env.ts
 var envsToCheck = {
-  PATH_TO_BUILDS: [true, true],
+  PATH_TO_BUILDS: [true, false],
   NODE_ENV: [false, false],
   PORT: [false, false]
 };
@@ -56163,6 +56163,36 @@ var initGit = async (opts) => {
   });
 };
 
+// src/utils/index.ts
+var spawn2 = async (args, opts) => {
+  const proc = Bun.spawn(args, {
+    stdout: "pipe",
+    stderr: "pipe",
+    onExit: async (proc2, ...a) => {
+      await opts?.onExit?.(proc2, ...a);
+      if (await proc2.exited) {
+        const shortCommand = args.join(" ").slice(0, 20);
+        const shortErrorMessage = `\`${shortCommand}\` exited with code ${proc2.exitCode}`;
+        console.log(shortErrorMessage);
+        const stderr = proc2.stderr && typeof proc2.stderr !== "number" ? await Bun.readableStreamToText(proc2.stderr) : null;
+        const stdout = proc2.stdout && typeof proc2.stdout !== "number" ? await Bun.readableStreamToText(proc2.stdout) : null;
+        throw new GraphQLError(shortErrorMessage, {
+          extensions: {
+            code: "FAILED_TO_SPAWN_PROCESS",
+            errorMessage: stderr ?? stdout ?? "Unknown error"
+          }
+        });
+      }
+    },
+    ...opts
+  });
+  await proc.exited;
+  return proc;
+};
+var gitPullFlowNode = async () => {
+  return await spawn2("git pull".split(" "), { cwd: import.meta.dir });
+};
+
 // src/graphql/Util.ts
 builder5.queryField("hello", (t) => t.field({
   type: "String",
@@ -56266,31 +56296,6 @@ server {
     return true;
   }
 }));
-var spawn2 = async (args, opts) => {
-  const proc = Bun.spawn(args, {
-    stdout: "pipe",
-    stderr: "pipe",
-    onExit: async (proc2, ...a) => {
-      await opts?.onExit?.(proc2, ...a);
-      if (await proc2.exited) {
-        const shortCommand = args.join(" ").slice(0, 20);
-        const shortErrorMessage = `\`${shortCommand}\` exited with code ${proc2.exitCode}`;
-        console.log(shortErrorMessage);
-        const stderr = proc2.stderr && typeof proc2.stderr !== "number" ? await Bun.readableStreamToText(proc2.stderr) : null;
-        const stdout = proc2.stdout && typeof proc2.stdout !== "number" ? await Bun.readableStreamToText(proc2.stdout) : null;
-        throw new GraphQLError(shortErrorMessage, {
-          extensions: {
-            code: "FAILED_TO_SPAWN_PROCESS",
-            errorMessage: stderr ?? stdout ?? "Unknown error"
-          }
-        });
-      }
-    },
-    ...opts
-  });
-  await proc.exited;
-  return proc;
-};
 
 // src/graphql/index.ts
 var schema6 = builder5.toSchema();
@@ -56346,6 +56351,14 @@ var app = new c$().use(cors()).get("/graphql", async ({ request }) => yogaHandle
 if (env.NODE_ENV === "test") {
   app.listen(0);
 } else {
+  if (env.NODE_ENV === "production") {
+    await gitPullFlowNode();
+    if (!env.PATH_TO_BUILDS) {
+      throw { message: "PATH_TO_BUILDS env var is not set." };
+    }
+    const path = await Bun.resolve(env.PATH_TO_BUILDS, import.meta.dir);
+    console.log(`\u2705 PATH_TO_BUILDS env var is set to: ${path}`);
+  }
   app.listen(PORT, () => {
     console.log(`\u2705 Server started at: http://localhost:${PORT}`);
     console.log(`\uD83D\uDFE3 GraphQL API: http://localhost:${PORT}/graphql`);
