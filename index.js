@@ -51440,7 +51440,7 @@ builder5.mutationField("setupFlowInstance", (t) => t.fieldWithInput({
       required: true
     }),
     maximumRamSize: t.input.int({
-      description: "The maximum amount of RAM to use for the Flow instance in bytes.",
+      description: "The maximum amount of RAM to use for the Flow instance in megabytes.",
       required: false
     })
   },
@@ -51452,7 +51452,7 @@ builder5.mutationField("setupFlowInstance", (t) => t.fieldWithInput({
     await spawn([
       "pm2",
       "start",
-      `NODE_ENV=production PORT=${args.input.port} DATABASE_URL=${args.input.databaseUrl} ORIGIN=https://${args.input.username}.${args.input.domainWithTld} PATH_TO_PLUGINS=../plugins/${args.input.username} BUN_JSC_forceRAMSize=${maxRam * 1000} bun run index.js`,
+      `"NODE_ENV=production PORT=${args.input.port} DATABASE_URL=${args.input.databaseUrl} ORIGIN=https://${args.input.username}.${args.input.domainWithTld} PATH_TO_PLUGINS=../../plugins/${args.input.username} BUN_JSC_forceRAMSize=${maxRam * 1000} bun run index.js"`,
       "-f",
       "--watch",
       "-n",
@@ -51510,14 +51510,19 @@ builder5.mutationField("test", (t) => t.field({
   type: "Boolean",
   description: "Test",
   resolve: async (_, args) => {
+    const maxRam = 90;
+    const cwd2 = path.resolve(import.meta.dir, `${basePath2}/nightly`);
     await spawn([
-      "sudo",
-      "certbot",
-      "certonly",
-      "--nginx",
-      "-d",
-      "richard2.isflow.in"
-    ]);
+      "pm2",
+      "start",
+      `"NODE_ENV=production PORT=4000 DATABASE_URL=postgresql://postgres:CMU1Lt5vjbHk@ep-dry-pine-a5hj2wxr-pooler.us-east-2.aws.neon.tech/richard?sslmode=require ORIGIN=https://richard.isflow.in PATH_TO_PLUGINS=../../plugins/richard BUN_JSC_forceRAMSize=${maxRam * 1000} bun run index.js"`,
+      "-f",
+      "--watch",
+      "-n",
+      "richard",
+      "--max-memory-restart",
+      `${maxRam}M`
+    ], { cwd: cwd2 });
     return true;
   }
 }));
