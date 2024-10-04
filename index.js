@@ -51347,6 +51347,8 @@ var spawn = async (args, opts) => {
         console.log(shortErrorMessage);
         const stderr = proc2.stderr && typeof proc2.stderr !== "number" ? await Bun.readableStreamToText(proc2.stderr) : null;
         const stdout = proc2.stdout && typeof proc2.stdout !== "number" ? await Bun.readableStreamToText(proc2.stdout) : null;
+        console.log("stderr:", stderr);
+        console.log("stdout:", stdout);
         throw new GraphQLError(shortErrorMessage, {
           extensions: {
             code: "FAILED_TO_SPAWN_PROCESS",
