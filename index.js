@@ -51452,7 +51452,7 @@ builder5.mutationField("setupFlowInstance", (t) => t.fieldWithInput({
     const domain = `${args.input.username}.${args.input.domainWithTld}`;
     const cwd2 = path2.resolve(import.meta.dir, `${basePath2}/${args.input.buildType}`);
     console.log("setupFlowInstance from build:", cwd2);
-    const maxRam = args.input.maximumRamSize ?? 90;
+    const maxRam = args.input.maximumRamSize ?? 180;
     await spawn([
       "pm2",
       "start",
@@ -51496,7 +51496,6 @@ server {
     proxy_pass http://localhost:${args.input.port};
   }
 }
-
 `;
     await Bun.write(`/etc/nginx/servers/${domain}`, nginxConfig).catch((e) => {
       throw new GraphQLError(e);
@@ -51514,35 +51513,17 @@ builder5.mutationField("test", (t) => t.field({
   type: "Boolean",
   description: "Test",
   resolve: async (_, args) => {
-    const port = 4000;
     const domain = `richard.isflow.in`;
-    const nginxConfig = `server {
-  listen 80;
-  server_name ${domain};
-  return 301 https://\$server_name\$request_uri;
-}
-
-server {
-  listen 443 ssl;
-  server_name ${domain};
-
-  ssl_certificate /etc/letsencrypt/live/${domain}/fullchain.pem;
-  ssl_certificate_key /etc/letsencrypt/live/${domain}/privkey.pem;
-
-  location / {
-    proxy_pass http://localhost:${port};
-  }
-}
-
-`;
-    await Bun.write(`/etc/nginx/servers/${domain}`, nginxConfig).catch((e) => {
+    await spawn([
+      "sudo",
+      "certbot",
+      "certonly",
+      "--nginx",
+      "-d",
+      domain
+    ]).catch((e) => {
       throw new GraphQLError(e);
     });
-    console.log("\u2705 nginx config written to /etc/nginx/servers/${domain}");
-    await spawn(["sudo", "nginx", "-t"]).catch((e) => {
-      throw new GraphQLError(e);
-    });
-    console.log("\u2705 nginx config is correct");
     return true;
   }
 }));
