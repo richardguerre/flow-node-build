@@ -51504,6 +51504,23 @@ server {
     return true;
   }
 }));
+builder5.mutationField("test", (t) => t.field({
+  type: "Boolean",
+  description: "Test",
+  resolve: async (_, args) => {
+    await spawn([
+      "sudo",
+      "certbot",
+      "certonly",
+      "--nginx",
+      "-d",
+      "richard.isflow.in"
+    ]).catch((e) => {
+      throw new GraphQLError(e);
+    });
+    return true;
+  }
+}));
 
 // src/graphql/index.ts
 var schema6 = builder5.toSchema();
