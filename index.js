@@ -51517,7 +51517,7 @@ builder5.mutationField("test", (t) => t.field({
     await spawn([
       "pm2",
       "start",
-      `"NODE_ENV=production PORT=4000 DATABASE_URL=postgresql://postgres:CMU1Lt5vjbHk@ep-dry-pine-a5hj2wxr-pooler.us-east-2.aws.neon.tech/richard?sslmode=require ORIGIN=https://richard.isflow.in PATH_TO_PLUGINS=../../plugins/richard BUN_JSC_forceRAMSize=${maxRam * 1000} bun run index.js"`,
+      `NODE_ENV=production PORT=4000 DATABASE_URL=postgresql://postgres:CMU1Lt5vjbHk@ep-dry-pine-a5hj2wxr-pooler.us-east-2.aws.neon.tech/richard?sslmode=require ORIGIN=https://richard.isflow.in PATH_TO_PLUGINS=../../plugins/richard BUN_JSC_forceRAMSize=${maxRam * 1000} bun run index.js`,
       "-f",
       "--watch",
       "-n",
