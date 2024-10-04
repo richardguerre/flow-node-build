@@ -51512,6 +51512,7 @@ builder5.mutationField("test", (t) => t.field({
   resolve: async (_, args) => {
     const maxRam = 90;
     const cwd2 = path.resolve(import.meta.dir, `${basePath2}/nightly`);
+    console.log("cwd:", cwd2);
     await spawn([
       "pm2",
       "start",
