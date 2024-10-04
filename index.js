@@ -51451,22 +51451,22 @@ builder5.mutationField("setupFlowInstance", (t) => t.fieldWithInput({
   resolve: async (_, args) => {
     const domain = `${args.input.username}.${args.input.domainWithTld}`;
     const cwd2 = path2.resolve(import.meta.dir, `${basePath2}/${args.input.buildType}`);
-    console.log("setupFlowInstance cwd:", cwd2);
+    console.log("setupFlowInstance from build:", cwd2);
     const maxRam = args.input.maximumRamSize ?? 90;
     await spawn([
       "pm2",
       "start",
-      `"NODE_ENV=production PORT=${args.input.port} DATABASE_URL=${args.input.databaseUrl} ORIGIN=https://${args.input.username}.${args.input.domainWithTld} PATH_TO_PLUGINS=../../plugins/${args.input.username} BUN_JSC_forceRAMSize=${maxRam * 1000} bun run index.js"`,
       "-f",
       "--watch",
       "-n",
       args.input.username,
       "--max-memory-restart",
-      `${maxRam}M`
+      `${maxRam}M`,
+      `NODE_ENV=production PORT=${args.input.port} DATABASE_URL=${args.input.databaseUrl} ORIGIN=https://${args.input.username}.${args.input.domainWithTld} PATH_TO_PLUGINS=../../plugins/${args.input.username} BUN_JSC_forceRAMSize=${maxRam * 1000} bun run index.js`
     ], { cwd: cwd2 }).catch((e) => {
       throw new GraphQLError(e);
     });
-    await spawn(["bunx", "pm2", "save"]).catch((e) => {
+    await spawn(["pm2", "save"]).catch((e) => {
       throw new GraphQLError(e);
     });
     await spawn([
@@ -51514,21 +51514,35 @@ builder5.mutationField("test", (t) => t.field({
   type: "Boolean",
   description: "Test",
   resolve: async (_, args) => {
-    const maxRam = 90;
-    const cwd2 = path2.resolve(import.meta.dir, `${basePath2}/nightly`);
-    console.log("import.meta.dir:", import.meta.dir);
-    console.log("cwd:", cwd2);
-    await spawn([
-      "pm2",
-      "start",
-      "-f",
-      "--watch",
-      "-n",
-      "richard",
-      "--max-memory-restart",
-      `${maxRam}M`,
-      `NODE_ENV=production PORT=4000 DATABASE_URL=postgresql://postgres:CMU1Lt5vjbHk@ep-dry-pine-a5hj2wxr-pooler.us-east-2.aws.neon.tech/richard?sslmode=require ORIGIN=https://richard.isflow.in PATH_TO_PLUGINS=../../plugins/richard BUN_JSC_forceRAMSize=${maxRam * 1000} bun run index.js`
-    ], { cwd: cwd2 });
+    const port = 4000;
+    const domain = `richard.isflow.in`;
+    const nginxConfig = `server {
+  listen 80;
+  server_name ${domain};
+  return 301 https://\$server_name\$request_uri;
+}
+
+server {
+  listen 443 ssl;
+  server_name ${domain};
+
+  ssl_certificate /etc/letsencrypt/live/${domain}/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/${domain}/privkey.pem;
+
+  location / {
+    proxy_pass http://localhost:${port};
+  }
+}
+
+`;
+    await Bun.write(`/etc/nginx/servers/${domain}`, nginxConfig).catch((e) => {
+      throw new GraphQLError(e);
+    });
+    console.log("\u2705 nginx config written to /etc/nginx/servers/${domain}");
+    await spawn(["sudo", "nginx", "-t"]).catch((e) => {
+      throw new GraphQLError(e);
+    });
+    console.log("\u2705 nginx config is correct");
     return true;
   }
 }));
