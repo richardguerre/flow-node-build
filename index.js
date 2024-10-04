@@ -51462,7 +51462,7 @@ builder5.mutationField("setupFlowInstance", (t) => t.fieldWithInput({
       args.input.username,
       "--max-memory-restart",
       `${maxRam}M`,
-      `NODE_ENV=production PORT=${args.input.port} DATABASE_URL=${args.input.databaseUrl} ORIGIN=https://${args.input.username}.${args.input.domainWithTld} PATH_TO_PLUGINS=../../plugins/${args.input.username} BUN_JSC_forceRAMSize=${maxRam * 1000} bun run index.js`
+      `NODE_ENV=production PORT=${args.input.port} DATABASE_URL=${args.input.databaseUrl} ORIGIN=https://${args.input.username}.${args.input.domainWithTld} PATH_TO_PLUGINS=../../plugins/${args.input.username} BUN_JSC_forceRAMSize=${maxRam * 1e6} bun --smol run index.js`
     ], { cwd: cwd2 }).catch((e) => {
       throw new GraphQLError(e);
     });
