@@ -51516,7 +51516,7 @@ builder5.mutationField("test", (t) => t.field({
       "certonly",
       "--nginx",
       "-d",
-      "richard.isflow.in"
+      "richard2.isflow.in"
     ]);
     return true;
   }
