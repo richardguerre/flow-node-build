@@ -56359,7 +56359,7 @@ if (env.NODE_ENV === "test") {
       throw { message: "PATH_TO_BUILDS env var is not set." };
     }
     const pathToBuilds = path.resolve(import.meta.dir, env.PATH_TO_BUILDS);
-    const exists2 = await fs.access(pathToBuilds).catch(() => false);
+    const exists2 = await fs.exists(pathToBuilds);
     if (!exists2) {
       throw {
         message: `PATH_TO_BUILDS env var is set to ${pathToBuilds} but it does not exist or cannot be accessed.`
