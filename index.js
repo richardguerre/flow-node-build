@@ -51515,9 +51515,7 @@ builder5.mutationField("test", (t) => t.field({
       "--nginx",
       "-d",
       "richard.isflow.in"
-    ]).catch((e) => {
-      throw new GraphQLError(e);
-    });
+    ]);
     return true;
   }
 }));
