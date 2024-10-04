@@ -56190,7 +56190,9 @@ var spawn2 = async (args, opts) => {
   return proc;
 };
 var gitPullFlowNode = async () => {
-  return await spawn2("git pull".split(" "), { cwd: import.meta.dir });
+  const res = await spawn2("git pull".split(" "), { cwd: import.meta.dir });
+  console.log("\u2705 flow-node repo updated.");
+  return res;
 };
 
 // src/graphql/Util.ts
@@ -56209,7 +56211,6 @@ builder5.mutationField("updateFlowNode", (t) => t.field({
   description: "Update the flow-node repo and restart it once up to date.",
   resolve: async (_, args) => {
     await gitPullFlowNode();
-    console.log("\u2705 flow-node repo updated.");
     return true;
   }
 }));
