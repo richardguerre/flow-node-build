@@ -51364,10 +51364,13 @@ var spawn = async (args, opts) => {
 };
 
 // src/utils/git.ts
+import path from "path";
 var basePath = env.PATH_TO_BUILDS ?? "../builds";
 var gitPullFlowBuild = async (opts) => {
+  const pathToBuild = path.resolve(import.meta.dir, `${basePath}/${opts.build}`);
+  console.log(`\uD83D\uDD35 updating ${opts.build} build at ${pathToBuild}/${opts.build}...`);
   const res = await spawn("git pull".split(" "), {
-    cwd: await Bun.resolve(`${basePath}/${opts.build}`, import.meta.dir)
+    cwd: pathToBuild
   });
   return res;
 };
@@ -51379,7 +51382,7 @@ var gitPullFlowNode = async () => {
 };
 
 // src/graphql/Util.ts
-import path from "path";
+import path2 from "path";
 builder5.queryField("hello", (t) => t.field({
   type: "String",
   resolve: () => "world!"
@@ -51446,7 +51449,7 @@ builder5.mutationField("setupFlowInstance", (t) => t.fieldWithInput({
   },
   resolve: async (_, args) => {
     const domain = `${args.input.username}.${args.input.domainWithTld}`;
-    const cwd2 = path.resolve(import.meta.dir, `${basePath2}/${args.input.buildType}`);
+    const cwd2 = path2.resolve(import.meta.dir, `${basePath2}/${args.input.buildType}`);
     console.log("setupFlowInstance cwd:", cwd2);
     const maxRam = args.input.maximumRamSize ?? 90;
     await spawn([
@@ -51511,7 +51514,7 @@ builder5.mutationField("test", (t) => t.field({
   description: "Test",
   resolve: async (_, args) => {
     const maxRam = 90;
-    const cwd2 = path.resolve(import.meta.dir, `${basePath2}/nightly`);
+    const cwd2 = path2.resolve(import.meta.dir, `${basePath2}/nightly`);
     console.log("import.meta.dir:", import.meta.dir);
     console.log("cwd:", cwd2);
     await spawn([
@@ -51562,7 +51565,7 @@ if (env.NODE_ENV === "development") {
 }
 
 // src/index.ts
-import path2 from "path";
+import path3 from "path";
 import fs from "fs/promises";
 var PORT = env.PORT ?? 5010;
 var yogaHandler = async (request) => {
@@ -51590,7 +51593,7 @@ if (env.NODE_ENV === "test") {
     if (!env.PATH_TO_BUILDS) {
       throw { message: "PATH_TO_BUILDS env var is not set." };
     }
-    const pathToBuilds = path2.resolve(import.meta.dir, env.PATH_TO_BUILDS);
+    const pathToBuilds = path3.resolve(import.meta.dir, env.PATH_TO_BUILDS);
     const exists = await fs.exists(pathToBuilds);
     if (!exists) {
       throw {
