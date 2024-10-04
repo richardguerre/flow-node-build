@@ -51444,17 +51444,18 @@ builder5.mutationField("setupFlowInstance", (t) => t.fieldWithInput({
   resolve: async (_, args) => {
     const domain = `${args.input.username}.${args.input.domainWithTld}`;
     const cwd2 = await Bun.resolve(`${basePath2}/${args.input.buildType}`, import.meta.dir);
+    const maxRam = args.input.maximumRamSize ?? 90;
     await spawn([
       "bunx",
       "pm2",
       "start",
-      `NODE_ENV=production PORT=${args.input.port} DATABASE_URL=${args.input.databaseUrl} ORIGIN=https://${args.input.username}.${args.input.domainWithTld} PATH_TO_PLUGINS=../plugins/${args.input.username} BUN_JSC_forceRAMSize=${args.input.maximumRamSize ?? 180000000} bun run index.js`,
+      `NODE_ENV=production PORT=${args.input.port} DATABASE_URL=${args.input.databaseUrl} ORIGIN=https://${args.input.username}.${args.input.domainWithTld} PATH_TO_PLUGINS=../plugins/${args.input.username} BUN_JSC_forceRAMSize=${maxRam * 1000} bun run index.js`,
       "-f",
       "--watch",
       "-n",
       args.input.username,
       "--max-memory-restart",
-      "180M"
+      `${maxRam}M`
     ], { cwd: cwd2 });
     await spawn(["bunx", "pm2", "save"]);
     await spawn(["sudo", "certbot", "certonly", "--nginx", "-d", domain]);
