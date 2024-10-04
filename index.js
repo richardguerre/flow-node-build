@@ -51372,7 +51372,7 @@ var gitPullFlowBuild = async (opts) => {
 var gitPullFlowNode = async () => {
   console.log("\uD83D\uDD35 updating flow-node repo...");
   const res = await spawn("git pull".split(" "), { cwd: import.meta.dir });
-  console.log("\u2705 flow-node is up to date.");
+  console.log("\u2705 flow-node is now up to date.");
   return res;
 };
 
