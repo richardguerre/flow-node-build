@@ -51377,6 +51377,7 @@ var gitPullFlowNode = async () => {
 };
 
 // src/graphql/Util.ts
+import path from "path";
 builder5.queryField("hello", (t) => t.field({
   type: "String",
   resolve: () => "world!"
@@ -51443,10 +51444,10 @@ builder5.mutationField("setupFlowInstance", (t) => t.fieldWithInput({
   },
   resolve: async (_, args) => {
     const domain = `${args.input.username}.${args.input.domainWithTld}`;
-    const cwd2 = await Bun.resolve(`${basePath2}/${args.input.buildType}`, import.meta.dir);
+    const cwd2 = path.resolve(import.meta.dir, `${basePath2}/${args.input.buildType}`);
+    console.log("setupFlowInstance cwd:", cwd2);
     const maxRam = args.input.maximumRamSize ?? 90;
     await spawn([
-      "bunx",
       "pm2",
       "start",
       `NODE_ENV=production PORT=${args.input.port} DATABASE_URL=${args.input.databaseUrl} ORIGIN=https://${args.input.username}.${args.input.domainWithTld} PATH_TO_PLUGINS=../plugins/${args.input.username} BUN_JSC_forceRAMSize=${maxRam * 1000} bun run index.js`,
@@ -51456,9 +51457,22 @@ builder5.mutationField("setupFlowInstance", (t) => t.fieldWithInput({
       args.input.username,
       "--max-memory-restart",
       `${maxRam}M`
-    ], { cwd: cwd2 });
-    await spawn(["bunx", "pm2", "save"]);
-    await spawn(["sudo", "certbot", "certonly", "--nginx", "-d", domain]);
+    ], { cwd: cwd2 }).catch((e) => {
+      throw new GraphQLError(e);
+    });
+    await spawn(["bunx", "pm2", "save"]).catch((e) => {
+      throw new GraphQLError(e);
+    });
+    await spawn([
+      "sudo",
+      "certbot",
+      "certonly",
+      "--nginx",
+      "-d",
+      domain
+    ]).catch((e) => {
+      throw new GraphQLError(e);
+    });
     const nginxConfig = `server {
   listen 80;
   server_name ${domain};
@@ -51478,9 +51492,15 @@ server {
 }
 
 `;
-    await Bun.write(`/etc/nginx/servers/${domain}`, nginxConfig);
-    await spawn(["sudo", "nginx", "-t"]);
-    await spawn(["sudo", "nginx", "-s", "reload"]);
+    await Bun.write(`/etc/nginx/servers/${domain}`, nginxConfig).catch((e) => {
+      throw new GraphQLError(e);
+    });
+    await spawn(["sudo", "nginx", "-t"]).catch((e) => {
+      throw new GraphQLError(e);
+    });
+    await spawn(["sudo", "nginx", "-s", "reload"]).catch((e) => {
+      throw new GraphQLError(e);
+    });
     return true;
   }
 }));
@@ -51518,7 +51538,7 @@ if (env.NODE_ENV === "development") {
 }
 
 // src/index.ts
-import path from "path";
+import path2 from "path";
 import fs from "fs/promises";
 var PORT = env.PORT ?? 5010;
 var yogaHandler = async (request) => {
@@ -51546,7 +51566,7 @@ if (env.NODE_ENV === "test") {
     if (!env.PATH_TO_BUILDS) {
       throw { message: "PATH_TO_BUILDS env var is not set." };
     }
-    const pathToBuilds = path.resolve(import.meta.dir, env.PATH_TO_BUILDS);
+    const pathToBuilds = path2.resolve(import.meta.dir, env.PATH_TO_BUILDS);
     const exists = await fs.exists(pathToBuilds);
     if (!exists) {
       throw {
