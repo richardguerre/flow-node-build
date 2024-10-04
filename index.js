@@ -51339,11 +51339,11 @@ var spawn = async (args, opts) => {
   const proc = Bun.spawn(args, {
     stdout: "pipe",
     stderr: "pipe",
-    onExit: async (proc2, ...a) => {
-      await opts?.onExit?.(proc2, ...a);
-      if (await proc2.exited) {
+    onExit: async (proc2) => {
+      const exited = await proc2.exited;
+      if (exited) {
         const shortCommand = args.join(" ").slice(0, 20);
-        const shortErrorMessage = `\`${shortCommand}\` exited with code ${proc2.exitCode}`;
+        const shortErrorMessage = `\`${shortCommand}\` exited with code ${proc2.exitCode ?? exited}`;
         console.log(shortErrorMessage);
         const stderr = proc2.stderr && typeof proc2.stderr !== "number" ? await Bun.readableStreamToText(proc2.stderr) : null;
         const stdout = proc2.stdout && typeof proc2.stdout !== "number" ? await Bun.readableStreamToText(proc2.stdout) : null;
