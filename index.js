@@ -56330,6 +56330,8 @@ if (env.NODE_ENV === "development") {
 }
 
 // src/index.ts
+import path from "path";
+import fs from "fs/promises";
 var PORT = env.PORT ?? 5010;
 var yogaHandler = async (request) => {
   const res = await createYoga({
@@ -56356,8 +56358,14 @@ if (env.NODE_ENV === "test") {
     if (!env.PATH_TO_BUILDS) {
       throw { message: "PATH_TO_BUILDS env var is not set." };
     }
-    const path = await Bun.resolve(env.PATH_TO_BUILDS, import.meta.dir);
-    console.log(`\u2705 PATH_TO_BUILDS env var is set to: ${path}`);
+    const pathToBuilds = path.resolve(import.meta.dir, env.PATH_TO_BUILDS);
+    const exists2 = await fs.access(pathToBuilds).catch(() => false);
+    if (!exists2) {
+      throw {
+        message: `PATH_TO_BUILDS env var is set to ${pathToBuilds} but it does not exist or cannot be accessed.`
+      };
+    }
+    console.log(`\u2705 PATH_TO_BUILDS env var is set to: ${pathToBuilds}`);
   }
   app.listen(PORT, () => {
     console.log(`\u2705 Server started at: http://localhost:${PORT}`);
