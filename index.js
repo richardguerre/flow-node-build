@@ -56204,6 +56204,14 @@ var values4 = {
   monthly: { value: "monthly" }
 };
 var BuildEnum = builder5.enumType("BuildType", { values: values4 });
+builder5.mutationField("updateFlowNode", (t) => t.field({
+  type: "Boolean",
+  description: "Update the flow-node repo and restart it once up to date.",
+  resolve: async (_, args) => {
+    await gitPullFlowNode();
+    return true;
+  }
+}));
 builder5.mutationField("udpateFlow", (t) => t.fieldWithInput({
   type: "Boolean",
   description: "Git pull one of the builds and restart any flow instances that started on that build.",
@@ -56362,7 +56370,7 @@ if (env.NODE_ENV === "test") {
     const exists2 = await fs.exists(pathToBuilds);
     if (!exists2) {
       throw {
-        message: `PATH_TO_BUILDS env var is set to ${pathToBuilds} but it does not exist or cannot be accessed.`
+        message: `PATH_TO_BUILDS env var is set to ${pathToBuilds} but it does not exist.`
       };
     }
     console.log(`\u2705 PATH_TO_BUILDS env var is set to: ${pathToBuilds}`);
