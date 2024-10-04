@@ -51508,14 +51508,8 @@ builder5.mutationField("test", (t) => t.field({
   type: "Boolean",
   description: "Test",
   resolve: async (_, args) => {
-    await spawn([
-      "sudo",
-      "certbot",
-      "certonly",
-      "--nginx",
-      "-d",
-      "richard.isflow.in"
-    ]).catch((e) => {
+    await spawn(["sudo", "certbot", "certonly", "--nginx", "-d", "richard.isflow.in"], { onExit: () => {
+    } }).catch((e) => {
       throw new GraphQLError(e);
     });
     return true;
