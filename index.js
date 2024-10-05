@@ -51616,6 +51616,8 @@ var yogaHandler = async (request) => {
     cors: { origin: undefined },
     context: async ({ request: request2 }) => {
       const reqToken = request2.headers.get("authorization")?.replace("Bearer ", "");
+      console.log("\uD83D\uDD35 reqToken:", reqToken);
+      console.log("\uD83D\uDD35    token:", token);
       return {
         token: reqToken,
         isTokenValid: () => token === reqToken
