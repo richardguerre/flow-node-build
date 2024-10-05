@@ -51616,9 +51616,6 @@ var yogaHandler = async (request) => {
     context: async ({ request: request2 }) => {
       const token = await getToken();
       const reqToken = request2.headers.get("authorization")?.replace("Bearer ", "");
-      console.log("      reqToken:", reqToken);
-      console.log("         token:", token);
-      console.log("  isTokenValid:", token === reqToken);
       return {
         token: reqToken,
         isTokenValid: () => token && token === reqToken
