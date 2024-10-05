@@ -51609,12 +51609,12 @@ if (env.NODE_ENV === "development") {
 import path3 from "path";
 import fs2 from "fs/promises";
 var PORT = env.PORT ?? 5010;
-var token = await getToken();
 var yogaHandler = async (request) => {
   const res = await createYoga({
     schema: schema6,
     cors: { origin: undefined },
     context: async ({ request: request2 }) => {
+      const token = await getToken();
       const reqToken = request2.headers.get("authorization")?.replace("Bearer ", "");
       console.log("      reqToken:", reqToken);
       console.log("         token:", token);
