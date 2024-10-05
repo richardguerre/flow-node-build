@@ -44537,6 +44537,7 @@ class YogaServer {
 // src/env.ts
 var envsToCheck = {
   PATH_TO_BUILDS: [true, false],
+  PATH_TO_META: [false, true],
   NODE_ENV: [false, false],
   PORT: [false, false]
 };
@@ -51315,8 +51316,8 @@ var builder5 = new esm_default({
     }
   }
 });
-builder5.queryType();
-builder5.mutationType();
+builder5.queryType({ authScopes: { authenticated: true } });
+builder5.mutationType({ authScopes: { authenticated: true } });
 builder5.addScalarType("Date", GraphQLDate, {});
 builder5.addScalarType("DateTime", GraphQLDateTime, {});
 builder5.addScalarType("PositiveInt", GraphQLPositiveInt, {});
@@ -51335,6 +51336,7 @@ builder5.scalarType("Time", {
 });
 
 // src/utils/index.ts
+import fs from "fs/promises";
 var spawn = async (args, opts) => {
   const proc = Bun.spawn(args, {
     stdout: "pipe",
@@ -51362,6 +51364,27 @@ var spawn = async (args, opts) => {
   await proc.exited;
   return proc;
 };
+var pathToMeta = env.PATH_TO_META ?? "../meta";
+var getToken = async () => {
+  try {
+    const tokenFile = await Bun.file(`${pathToMeta}/token.json`).text();
+    const tokenJson = JSON.parse(tokenFile);
+    return tokenJson.value ?? null;
+  } catch {
+    return null;
+  }
+};
+var setToken = async (token) => {
+  try {
+    await fs.readdir(pathToMeta);
+  } catch (err) {
+    if (err.code !== "ENOENT") {
+      throw err;
+    }
+    await fs.mkdir(pathToMeta, { recursive: true });
+  }
+  await Bun.write(`${pathToMeta}/token.json`, JSON.stringify({ value: token }));
+};
 
 // src/utils/git.ts
 import path from "path";
@@ -51385,8 +51408,17 @@ var gitPullFlowNode = async () => {
 // src/graphql/Util.ts
 import path2 from "path";
 builder5.queryField("hello", (t) => t.field({
+  authScopes: { public: true },
+  skipTypeScopes: true,
   type: "String",
   resolve: () => "world!"
+}));
+builder5.queryField("healthCheck", (t) => t.field({
+  type: "Boolean",
+  description: "Check if the Flow node server is alive and healthy.",
+  authScopes: { public: true },
+  skipTypeScopes: true,
+  resolve: () => true
 }));
 var values4 = {
   nightly: { value: "nightly" },
@@ -51510,11 +51542,42 @@ server {
   }
 }));
 
+// src/graphql/Token.ts
+builder5.queryField("isTokenSet", (t) => t.field({
+  type: "Boolean",
+  description: "Whether a token has been set in the Flow node server.",
+  authScopes: { public: true },
+  skipTypeScopes: true,
+  resolve: async () => {
+    return await getToken() !== null;
+  }
+}));
+builder5.mutationField("setToken", (t) => t.fieldWithInput({
+  type: "Boolean",
+  description: "Set the token for the Flow node server.",
+  authScopes: { public: true },
+  skipTypeScopes: true,
+  input: {
+    token: t.input.string({
+      description: "The token to set.",
+      required: true
+    })
+  },
+  resolve: async (_, args) => {
+    if (await getToken()) {
+      throw new GraphQLError("Token already set.");
+    }
+    await setToken(args.input.token).catch((e) => {
+      throw new GraphQLError(e);
+    });
+    return true;
+  }
+}));
+
 // src/graphql/index.ts
 var schema6 = builder5.toSchema();
 if (env.NODE_ENV === "development") {
   const schemaAsString = printSchema(schema6);
-  console.log(import.meta.dir);
   const graphqlPath = await Bun.resolve("../../../../packages/common/schema.graphql", import.meta.dir);
   await Bun.write(graphqlPath, "# @generated\n" + schemaAsString);
   console.log(`
@@ -51544,14 +51607,22 @@ if (env.NODE_ENV === "development") {
 
 // src/index.ts
 import path3 from "path";
-import fs from "fs/promises";
+import fs2 from "fs/promises";
 var PORT = env.PORT ?? 5010;
+var token = await getToken();
 var yogaHandler = async (request) => {
   const res = await createYoga({
     schema: schema6,
     cors: { origin: undefined },
+    context: async ({ request: request2 }) => {
+      const reqToken = request2.headers.get("authorization")?.replace("Bearer ", "");
+      return {
+        token: reqToken,
+        isTokenValid: () => token === reqToken
+      };
+    },
     graphiql: {
-      title: "Flow CT API",
+      title: "Flow Node API",
       headers: JSON.stringify({
         Authorization: `Bearer PASTE_TOKEN_HERE`
       })
@@ -51572,7 +51643,7 @@ if (env.NODE_ENV === "test") {
       throw { message: "PATH_TO_BUILDS env var is not set." };
     }
     const pathToBuilds = path3.resolve(import.meta.dir, env.PATH_TO_BUILDS);
-    const exists = await fs.exists(pathToBuilds);
+    const exists = await fs2.exists(pathToBuilds);
     if (!exists) {
       throw {
         message: `PATH_TO_BUILDS env var is set to ${pathToBuilds} but it does not exist.`
