@@ -44431,7 +44431,7 @@ builder5.mutationField("updateFlowNode", (t) => t.field({
     return true;
   }
 }));
-builder5.mutationField("udpateFlow", (t) => t.fieldWithInput({
+builder5.mutationField("updateFlow", (t) => t.fieldWithInput({
   type: "Boolean",
   description: "Git pull one of the builds and restart any flow instances that started on that build.",
   input: {
